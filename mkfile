@@ -1,9 +1,11 @@
 </$objtype/mkfile
 
+TARG=doll
+
 OFILES=\
 	main.$O
 
-BINDIR=\
+BIN=\
 	/$objtype/bin
 
 </sys/src/cmd/mkone

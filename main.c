@@ -38,26 +38,12 @@ error(char *fmt, ...)
 	va_end(args);
 }
 
-#pragma varargck argpos error 1
-void
-verbose(int l, char *fmt, ...)
-{
-	va_list args;
-
-	if(verbosity < l)
-		return;
-
-	va_start(args, fmt);
-	vfprint(1, fmt, args);
-	va_end(args);
-}
-
 #define verbose(lvl, ...) if(verbosity < (lvl)) {} else print(__VA_ARGS__);
 
 void
 usage(void)
 {
-	fprint(2, "usage: %s [-k] [-o out] exec\n", argv0);
+	fprint(2, "usage: %s [-kv] [-o out] exec\n", argv0);
 	exits("usage");
 }
 
@@ -92,8 +78,6 @@ main(int argc, char **argv)
 	if((ofd = create(out, OWRITE|OTRUNC, 0755)) < 0)
 		sysfatal("create: %r");
 
-	crackhdr(ifd, &fhdr);
-
 	verbose(1, "executable is %s\n", fhdr.name);
 
 	if(fhdr.type != FPOWER && fhdr.type != FPOWERB)
@@ -102,7 +86,7 @@ main(int argc, char **argv)
 	machbytype(fhdr.type);
 
 	dol.txtaddr[0] = beswal(fhdr.txtaddr);
-	dol.txtoff[0] = beswal(fhdr.txtoff);
+	dol.txtoff[0] = beswal(fhdr.txtoff+0x100);
 	dol.txtsz[0] = beswal(fhdr.txtsz);
 	if(fhdr.txtaddr < 0x80003F00 || fhdr.txtaddr > 0x81330000)
 		error("text outside standard executable area (0x%08lX)", (ulong)fhdr.txtaddr);
@@ -116,7 +100,7 @@ main(int argc, char **argv)
 	);
 
 	dol.dataddr[0] = beswal(fhdr.dataddr);
-	dol.datoff[0] = beswal(fhdr.datoff);
+	dol.datoff[0] = beswal(fhdr.datoff+0x100);
 	dol.datsz[0] = beswal(fhdr.datsz);
 
 	verbose(2,
@@ -146,7 +130,7 @@ main(int argc, char **argv)
 	if(write(ofd, &dol, sizeof(dol)) != sizeof(dol))
 		sysfatal("write: %r");
 
-	seek(ifd, fhdr.hdrsz+1, 0);
+	seek(ifd, fhdr.hdrsz, 0);
 	while(read(ifd, buf, sizeof(buf)) > 0)
 		if(write(ofd, buf, sizeof(buf)) != sizeof(buf))
 			sysfatal("write: %r");
