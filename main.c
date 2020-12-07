@@ -22,36 +22,6 @@ struct Dolhdr
 	uchar padding[26];
 };
 
-enum
-{
-	BIG, LITTLE
-};
-
-int
-curendianness(void)
-{
-	union
-	{
-		int i;
-		uchar c;
-	} v;
-
-	v.i = 0xFF;
-	return v.c == 0xFF;
-}
-
-void
-bigstore(char *dest, void* src, usize len)
-{
-	char *s = src;
-
-	if(curendianness() == BIG)
-		memcpy(dest, src, len);
-	else
-		for(int c = 0; c < len; c++)
-			dest[c] = s[len-c];
-}
-
 #pragma varargck argpos error 1
 void
 error(char *fmt, ...)
